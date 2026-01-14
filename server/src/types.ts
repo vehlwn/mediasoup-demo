@@ -1,7 +1,8 @@
 import type * as mediasoupTypes from 'mediasoup/types';
 
 export type ServerConfig = {
-	domain: string;
+	domain?: string;
+	reverse_proxy_uri?: string,
 	http: {
 		listenIp: string;
 		listenPort: number;

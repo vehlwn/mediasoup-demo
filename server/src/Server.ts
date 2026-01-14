@@ -120,15 +120,23 @@ export class Server extends EnhancedEventEmitter<ServerEvents> {
 	}
 
 	private static computeHttpOriginHeader(config: ServerConfig): string {
-		const schema = config.http.tls ? 'https' : 'http';
-		const domain = config.domain;
-		const port = config.http.listenPort;
-		const httpOriginHeader = `${schema}://${domain}:${port}`;
-
-		logger.info(
-			'computeHttpOriginHeader() | computed HTTP Origin header: %o',
-			httpOriginHeader
-		);
+		let httpOriginHeader;
+		if (config.reverse_proxy_uri) {
+			httpOriginHeader = config.reverse_proxy_uri;
+			logger.info(
+				'computeHttpOriginHeader() | using reverse_proxy_uri: %o',
+				httpOriginHeader
+			);
+		} else {
+			const schema = config.http.tls ? 'https' : 'http';
+			const domain = config.domain;
+			const port = config.http.listenPort;
+			httpOriginHeader = `${schema}://${domain}:${port}`;
+			logger.info(
+				'computeHttpOriginHeader() | computed HTTP Origin header: %o',
+				httpOriginHeader
+			);
+		}
 
 		return httpOriginHeader;
 	}

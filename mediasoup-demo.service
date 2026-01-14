@@ -1,0 +1,33 @@
+[Unit]
+Description = Mediasoup demo media server
+After = network.target
+
+[Service]
+User = github-mediasoup-demo
+WorkingDirectory = /home/github-mediasoup-demo/server
+Environment = DEBUG="*"
+ExecStart = /usr/bin/npm start
+
+RestartSec = 10
+Restart = on-failure
+
+# hardening
+# Node crashes with MemoryDenyWriteExecute = true
+NoNewPrivileges = true
+PrivateDevices = true
+PrivateTmp = true
+ProtectClock = true
+ProtectControlGroups = true
+ProtectHostname = true
+ProtectKernelLogs = true
+ProtectKernelModules = true
+ProtectKernelTunables = true
+ProtectProc = invisible
+ProtectSystem = strict
+RestrictAddressFamilies = AF_INET AF_INET6 AF_UNIX
+
+# npx requires access to home dir
+ProtectHome = false
+
+[Install]
+WantedBy = multi-user.target

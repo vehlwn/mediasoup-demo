@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  build_front:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Create fake config
+        run: cd ../server && cp config.example.mjs config.mjs
+
+      - name: Build
+        run: npm run build
+
+      - name: Create artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: front
+          path: app/dist
+
+  build_server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v6
+
+      - name: Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run typescript:build
+
+      - name: Tar files to fix artifacts permission loss
+        run: tar --create --verbose -f server.tar .
+
+      - name: Create artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: server
+          path: server/server.tar
+
+  deploy:
+    needs: [build_front, build_server]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH client
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          cat << EOF > ~/.ssh/config
+            Host prod
+            HostName ${{secrets.DEPLOY_HOST}}
+            User github-mediasoup-demo
+            StrictHostKeyChecking no
+          EOF
+
+      - name: Download front artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: front
+          path: front
+
+      - name: Download server artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: server
+          path: server
+
+      - name: Untar server artifacts
+        run: |
+            cd server
+            tar xvf server.tar
+            rm -v server.tar
+
+      - name: Upload front artifacts
+        run: rsync --archive --delete --verbose front/ prod:/var/www/mediasoup-demo
+
+      - name: Upload server artifacts
+        run: rsync --archive --delete --verbose server prod:~
+
+      - name: Patch server config
+        run: ssh prod cp "~/config.mjs" "~/server"
+
+      - name: Restart service
+        run: ssh prod sudo systemctl restart mediasoup-demo.service

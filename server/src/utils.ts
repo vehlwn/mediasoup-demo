@@ -29,12 +29,7 @@ export function areSameHttpOrigins(urlA?: string, urlB?: string): boolean {
 	try {
 		const a = new URL(urlA);
 		const b = new URL(urlB);
-
-		return (
-			(a.protocol === 'http:' || a.protocol === 'https:') &&
-			a.protocol === b.protocol &&
-			a.hostname === b.hostname
-		);
+		return a.hostname === b.hostname;
 	} catch {
 		return false;
 	}
