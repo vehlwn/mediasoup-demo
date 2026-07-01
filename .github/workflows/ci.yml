@@ -13,7 +13,7 @@ jobs:
         working-directory: app
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
@@ -25,7 +25,7 @@ jobs:
         run: npm run build
 
       - name: Create artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: front
           path: app/dist
@@ -37,12 +37,7 @@ jobs:
         working-directory: server
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v6
-
-      - name: Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
+        uses: actions/checkout@v7
 
       - name: Install dependencies
         run: npm ci
@@ -54,7 +49,7 @@ jobs:
         run: tar --create --verbose -f server.tar .
 
       - name: Create artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: server
           path: server/server.tar
@@ -76,13 +71,13 @@ jobs:
           EOF
 
       - name: Download front artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: front
           path: front
 
       - name: Download server artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: server
           path: server
